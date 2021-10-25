@@ -19,14 +19,18 @@ echo "Build the libraries.."
 mkdir -p lib
 make
 echo "Run the example"
-export LD_LIBRARY_PATH=/tvm/build:${LD_LIBRARY_PATH}
-export DYLD_LIBRARY_PATH=/tvm/build:${DYLD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=../../build:${LD_LIBRARY_PATH}
+export DYLD_LIBRARY_PATH=../../build:${DYLD_LIBRARY_PATH}
 
-echo "Run the deployment with all in one packed library..."
-lib/cpp_deploy_pack
+# echo "Run the deployment with all in one packed library..."
+# lib/cpp_deploy_pack
 
-# echo "Run the python deployment with all in normal library..."
-python3 python_deploy.py
+
+# echo "Run the cpp deployment with all in normal library..."
+# lib/cpp_deploy_normal
+
+# # echo "Run the python deployment with all in normal library..."
+# python3 python_deploy.py
 
 echo "Testing with PAPI"
-lib/cpp_deploy_pack_papi
+lib/cpp_deploy_normal_papi

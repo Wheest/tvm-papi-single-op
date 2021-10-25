@@ -26,7 +26,8 @@
 #include <tvm/runtime/packed_func.h>
 #include <tvm/runtime/registry.h>
 #include <tvm/runtime/contrib/papi.h>
-#include <tvm/runtime/container/map.h>
+#include <tvm/runtime/profiling.h>
+
 
 #include <cstdio>
 
@@ -73,28 +74,6 @@ void Verify(tvm::runtime::Module mod, std::string fname) {
   }
 
   // Get the PAPI collector running
-  // static const tvm::runtime::Map<DLDeviceType, tvm::runtime::Array<tvm::runtime::String>> metric_names = {
-  //   {kDLCPU,
-  //    {"perf::CYCLES", "perf::STALLED-CYCLES-FRONTEND", "perf::STALLED-CYCLES-BACKEND",
-  //     "perf::INSTRUCTIONS", "perf::CACHE-MISSES"}},
-  //   {kDLCUDA, {"cuda:::event:elapsed_cycles_sm:device=0"}}};
-
-  // tvm::runtime::Map<tvm::runtime::profiling::DeviceWrapper, tvm::runtime::Array<tvm::runtime::String>> metric_names;
-  // tvm::runtime::profiling::DeviceWrapper dev = tvm::runtime::profiling::DeviceWrapper(tvm::Device::cpu(0));
-
-  // static const std::unordered_map<DLDeviceType, std::vector<std::string>> metric_names = {
-  //   {kDLCPU,
-  //    {"perf::CYCLES", "perf::STALLED-CYCLES-FRONTEND", "perf::STALLED-CYCLES-BACKEND",
-  //     "perf::INSTRUCTIONS", "perf::CACHE-MISSES"}},
-  //   {kDLCUDA, {"cuda:::event:elapsed_cycles_sm:device=0"}}};
-
-
-  // static const tvm::runtime::Map<tvm::runtime::profiling::DeviceWrapper, tvm::runtime::Array<tvm::runtime::String>> metric_names = {};
-  // tvm::runtime::Array<tvm::runtime::String> metrics_list = ;
-  // tvm::Device dev = {kDLCPU, 0};
-  // tvm::runtime::profiling::DeviceWrapper dev_w = tvm::runtime::profiling::DeviceWrapper(dev);
-  // metric_names[dev_w] = {"perf::CYCLES", "perf::STALLED-CYCLES-FRONTEND", "perf::STALLED-CYCLES-BACKEND", "perf::INSTRUCTIONS", "perf::CACHE-MISSES"};
-
  //   * Example usage:
  // * \code{.cpp}
  // * Device cpu, gpu;
@@ -111,13 +90,26 @@ void Verify(tvm::runtime::Module mod, std::string fname) {
  // * std::cout << prof.Report << std::endl; // print profiling report
  // * \endcode
  tvm::Device dev = {kDLCPU, 0};
- tvm::runtime::profiling::MetricCollector papi_collector;
+ tvm::Map<tvm::runtime::profiling::DeviceWrapper, tvm::Array<tvm::String>> metrics({
+    {kDLCPU,
+     {"perf::CYCLES", "perf::STALLED-CYCLES-FRONTEND", "perf::STALLED-CYCLES-BACKEND",
+      "perf::INSTRUCTIONS", "perf::CACHE-MISSES"}},
+    {kDLCUDA, {"cuda:::event:elapsed_cycles_sm:device=0"}}});
+
+
+tvm::runtime::profiling::MetricCollector papi_collector = tvm::runtime::profiling::CreatePAPIMetricCollector(metrics);
+
+ std::cout << "papi_collector created" << std::endl;
+
  tvm::runtime::profiling::Profiler prof = tvm::runtime::profiling::Profiler({dev}, {papi_collector});
+ std::cout << "Profiler created" << std::endl;
  f(A, B, C, out); // warmup
+ std::cout << "Warmup perfomed" << std::endl;
  prof.Start();
  prof.StartCall("matmul_add_dyn", dev);
  f(A, B, C, out);
  prof.StopCall();
+
  // std::cout << prof.Report << std::endl;
  // print profiling report
 

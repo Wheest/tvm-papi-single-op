@@ -30,7 +30,7 @@ PKG_LDFLAGS = -L${TVM_ROOT}/build -ldl -pthread
 .PHONY: clean all
 
 all: lib/cpp_deploy_pack lib/cpp_deploy_normal lib/cpp_deploy_pack_papi
-papi: lib/cpp_deploy_pack_papi
+papi: lib/cpp_deploy_normal_papi
 
 # Build rule for all in one TVM package library
 lib/libtvm_runtime_pack.o: tvm_runtime_pack.cc
@@ -47,15 +47,13 @@ lib/cpp_deploy_pack: cpp_deploy.cc lib/test_sys.o lib/libtvm_runtime_pack.o
 	@mkdir -p $(@D)
 	$(CXX) $(PKG_CFLAGS) -o $@  $^ $(PKG_LDFLAGS)
 
-
-# Deploy using the all in one TVM package library with PAPI counters
-lib/cpp_deploy_pack_papi: cpp_deploy_papi.cc lib/test_sys.o lib/libtvm_runtime_pack.o
-	@mkdir -p $(@D)
-	$(CXX) $(PKG_CFLAGS) -o $@  $^ $(PKG_LDFLAGS)
-
-
 # Deploy using pre-built libtvm_runtime.so
 lib/cpp_deploy_normal: cpp_deploy.cc lib/test_sys.o
+	@mkdir -p $(@D)
+	$(CXX) $(PKG_CFLAGS) -o $@  $^ -ltvm_runtime $(PKG_LDFLAGS)
+
+# Deploy using pre-built libtvm_runtime.so with PAPI counters
+lib/cpp_deploy_normal_papi: cpp_deploy_papi.cc lib/test_sys.o
 	@mkdir -p $(@D)
 	$(CXX) $(PKG_CFLAGS) -o $@  $^ -ltvm_runtime $(PKG_LDFLAGS)
 clean:
